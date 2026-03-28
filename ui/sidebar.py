@@ -1,64 +1,39 @@
 """ui/sidebar.py — Sidebar rendering: new chat, document upload, conversation list."""
+import json
 import os
-import asyncio
+
+import httpx
 import streamlit as st
-from langchain_core.messages import HumanMessage
 
-from config import MAX_SIDEBAR_THREADS
-from rag.ingest import ingest_document, SUPPORTED_EXTENSIONS
-from ui.utils import reset_chat, load_conversation, message_format_converter
+from config import MAX_SIDEBAR_THREADS, BACKEND_URL
+from rag.ingest import SUPPORTED_EXTENSIONS
+from ui.utils import reset_chat, load_conversation
 
 
-# ── Thread listing (async helper) ────────────────────────────
+# ── Thread listing ────────────────────────────────────────────
 def _retrieve_all_threads() -> list[dict]:
-    from core.graph import checkpointer, run_async
-
-    async def _list():
-        seen, threads = set(), []
-        async for checkpoint in checkpointer.alist(None):
-            tid = checkpoint.config["configurable"]["thread_id"]
-            if tid in seen:
-                continue
-            seen.add(tid)
-            messages = checkpoint.checkpoint.get("channel_values", {}).get("messages", [])
-            first_human = next(
-                (m.content[:40] + ("..." if len(m.content) > 40 else "")
-                 for m in messages if isinstance(m, HumanMessage)),
-                None,
-            )
-            if first_human:
-                threads.append({"thread_id": tid, "label": first_human})
-        return threads
-
-    return run_async(_list())
+    try:
+        resp = httpx.get(f"{BACKEND_URL}/threads", timeout=10)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception:
+        return []
 
 
-# ── Streaming helper (used by chat.py) ───────────────────────
-def stream_response(user_input: str, config: dict):
-    from core.graph import chatbot, run_async
-    from langchain_core.messages import HumanMessage as HM
-
-    async def _astream():
-        async for chunk, meta in chatbot.astream(
-            {"messages": [HM(content=user_input)]},
-            config=config,
-            stream_mode="messages",
-        ):
-            if (
-                chunk.content
-                and not isinstance(chunk.content, list)
-                and meta.get("langgraph_node") == "chat_node"
-            ):
-                yield chunk.content
-
-    async def _collect():
-        parts = []
-        async for c in _astream():
-            parts.append(c)
-        return parts
-
-    for part in run_async(_collect()):
-        yield part
+# ── Streaming helper (consumed by chat.py via st.write_stream) ─
+def stream_response(user_input: str, thread_id: str):
+    """POST to /threads/{thread_id}/chat and yield SSE chunks one by one."""
+    with httpx.Client(timeout=None) as client:
+        with client.stream(
+            "POST",
+            f"{BACKEND_URL}/threads/{thread_id}/chat",
+            json={"message": user_input},
+        ) as response:
+            for line in response.iter_lines():
+                if line.startswith("data: "):
+                    data = line[6:]
+                    if data != "[DONE]":
+                        yield json.loads(data)
 
 
 # ── Sidebar render ────────────────────────────────────────────
@@ -84,9 +59,8 @@ def _render_document_upload():
     if already_loaded:
         st.sidebar.success(f"📄 **{already_loaded}**")
         if st.sidebar.button("🗑️ Remove document", use_container_width=True, key="remove_doc"):
-            from rag.store import clear_retriever
+            httpx.delete(f"{BACKEND_URL}/threads/{current_tid}/documents", timeout=10)
             del st.session_state["pdf_ingested_threads"][current_tid]
-            clear_retriever(current_tid)
             st.rerun()
         return
 
@@ -111,13 +85,13 @@ def _render_document_upload():
 
     with st.sidebar.status("📥 Processing document...", expanded=False) as status:
         try:
-            from core.graph import embeddings
-            result = ingest_document(
-                file_bytes=uploaded.getvalue(),
-                thread_id=current_tid,
-                embeddings=embeddings,
-                filename=uploaded.name,
+            resp = httpx.post(
+                f"{BACKEND_URL}/threads/{current_tid}/documents",
+                files={"file": (uploaded.name, uploaded.getvalue())},
+                timeout=120,
             )
+            resp.raise_for_status()
+            result = resp.json()
             st.session_state["pdf_ingested_threads"][current_tid] = uploaded.name
             status.update(
                 label=f"✅ Ready — {result['chunks']} chunks indexed",
@@ -141,9 +115,8 @@ def _render_conversation_list():
 
         with col1:
             if st.button(label, key=f"thread_{tid}", use_container_width=True):
-                st.session_state["thread_id"] = tid
-                messages = load_conversation(tid)
-                st.session_state["message_history"] = message_format_converter(messages)
+                st.session_state["thread_id"]       = tid
+                st.session_state["message_history"] = load_conversation(tid)
 
         with col2:
             with st.popover("···", use_container_width=True):

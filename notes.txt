@@ -1,0 +1,2 @@
+-- create pine cone index
+https://console.pinecone.io 

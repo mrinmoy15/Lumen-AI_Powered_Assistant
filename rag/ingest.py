@@ -1,4 +1,4 @@
-"""rag/ingest.py — Document loading, chunking and FAISS indexing."""
+"""rag/ingest.py — Document loading, chunking and Pinecone indexing."""
 import os
 import tempfile
 from typing import Optional
@@ -11,9 +11,9 @@ from langchain_community.document_loaders import (
     UnstructuredPowerPointLoader,
 )
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
+from langchain_pinecone import PineconeVectorStore
 
-from config import CHUNK_SIZE, CHUNK_OVERLAP, RETRIEVER_K
+from config import CHUNK_SIZE, CHUNK_OVERLAP, PINECONE_INDEX_NAME
 from rag.store import set_retriever
 
 # Human-readable labels, also used for validation
@@ -52,11 +52,11 @@ def ingest_document(
     filename: Optional[str] = None,
 ) -> dict:
     """
-    Chunk and index a document into a per-thread FAISS retriever.
+    Chunk and index a document into Pinecone under the thread's namespace.
 
     Args:
         file_bytes:  Raw file content.
-        thread_id:   The chat thread this document belongs to.
+        thread_id:   The chat thread this document belongs to (used as namespace).
         embeddings:  An OpenAIEmbeddings (or compatible) instance.
         filename:    Original filename, used to detect extension.
 
@@ -85,9 +85,20 @@ def ingest_document(
             separators=["\n\n", "\n", " ", ""],
         ).split_documents(docs)
 
-        retriever = FAISS.from_documents(chunks, embeddings).as_retriever(
-            search_type="similarity",
-            search_kwargs={"k": RETRIEVER_K},
+        # Clear any existing vectors for this thread namespace before re-indexing.
+        try:
+            from pinecone import Pinecone as PineconeClient
+            pc = PineconeClient(api_key=os.getenv("PINECONE_API_KEY"))
+            pc.Index(PINECONE_INDEX_NAME).delete(delete_all=True, namespace=str(thread_id))
+        except Exception:
+            pass  # namespace doesn't exist yet on first upload; safe to ignore
+
+        # Each thread gets its own Pinecone namespace — vectors persist across restarts.
+        PineconeVectorStore.from_documents(
+            documents=chunks,
+            embedding=embeddings,
+            index_name=PINECONE_INDEX_NAME,
+            namespace=str(thread_id),
         )
 
         metadata = {
@@ -96,7 +107,7 @@ def ingest_document(
             "documents": len(docs),
             "chunks": len(chunks),
         }
-        set_retriever(thread_id, retriever, metadata)
+        set_retriever(thread_id, metadata)
         return metadata
 
     finally:

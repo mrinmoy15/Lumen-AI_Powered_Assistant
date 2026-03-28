@@ -1,4 +1,5 @@
 # stock_mcp.py
+import os
 import httpx
 import json
 from mcp.server.fastmcp import FastMCP
@@ -7,7 +8,7 @@ from pydantic import BaseModel, Field, field_validator, ConfigDict
 # -------------------------
 # Constants
 # -------------------------
-ALPHA_VANTAGE_API_KEY = "TSLIQ91ZHXK0DEIU"
+ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY", "")
 ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query"
 
 mcp = FastMCP("stock_mcp")

@@ -1,42 +1,49 @@
-"""db/database_utils.py — SQLite thread tracker for LUMEN."""
-import sqlite3
+"""db/database_utils.py — PostgreSQL thread tracker for LUMEN."""
+import psycopg
 from datetime import datetime, timedelta, timezone
-from config import DB_PATH
+from config import DATABASE_URL
 
-connection = sqlite3.connect(database=str(DB_PATH), check_same_thread=False)
+
+def _get_conn():
+    return psycopg.connect(DATABASE_URL)
 
 
 def initialize_thread_tracker():
-    cursor = connection.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS thread_tracker (
-            thread_id  TEXT PRIMARY KEY,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    connection.commit()
+    with _get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS thread_tracker (
+                    thread_id  TEXT PRIMARY KEY,
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                )
+            """)
+        conn.commit()
 
 
 def cleanup_old_threads(days: int = 7):
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-    cursor = connection.cursor()
-    cursor.execute(
-        "SELECT thread_id FROM thread_tracker WHERE created_at < ?", (cutoff,)
-    )
-    old_threads = [row[0] for row in cursor.fetchall()]
-    for tid in old_threads:
-        cursor.execute("DELETE FROM checkpoints    WHERE thread_id = ?", (tid,))
-        cursor.execute("DELETE FROM writes         WHERE thread_id = ?", (tid,))
-        cursor.execute("DELETE FROM thread_tracker WHERE thread_id = ?", (tid,))
-    connection.commit()
+    with _get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT thread_id FROM thread_tracker WHERE created_at < %s", (cutoff,)
+            )
+            old_threads = [row[0] for row in cur.fetchall()]
+            for tid in old_threads:
+                cur.execute("DELETE FROM checkpoint_blobs  WHERE thread_id = %s", (tid,))
+                cur.execute("DELETE FROM checkpoint_writes WHERE thread_id = %s", (tid,))
+                cur.execute("DELETE FROM checkpoints       WHERE thread_id = %s", (tid,))
+                cur.execute("DELETE FROM thread_tracker    WHERE thread_id = %s", (tid,))
+        conn.commit()
     print(f"Cleaned up {len(old_threads)} threads older than {days} days")
 
 
 def delete_thread(thread_id: str):
     """Delete a thread and all its checkpoint data."""
     tid = str(thread_id)
-    cursor = connection.cursor()
-    cursor.execute("DELETE FROM thread_tracker WHERE thread_id = ?", (tid,))
-    cursor.execute("DELETE FROM writes         WHERE thread_id = ?", (tid,))
-    cursor.execute("DELETE FROM checkpoints    WHERE thread_id = ?", (tid,))
-    connection.commit()
+    with _get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM checkpoint_blobs  WHERE thread_id = %s", (tid,))
+            cur.execute("DELETE FROM checkpoint_writes WHERE thread_id = %s", (tid,))
+            cur.execute("DELETE FROM checkpoints       WHERE thread_id = %s", (tid,))
+            cur.execute("DELETE FROM thread_tracker    WHERE thread_id = %s", (tid,))
+        conn.commit()
