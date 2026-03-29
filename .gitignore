@@ -141,6 +141,7 @@ celerybeat.pid
 *.tfvars
 *.tfstate
 *.tfstate.backup
+*.tfstate.*.backup
 .terraform/
 .envrc
 .venv
