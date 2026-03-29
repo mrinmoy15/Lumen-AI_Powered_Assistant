@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.git/
+.gitignore
+chatbot.db
+chatbot.db-shm
+chatbot.db-wal
+*.md

@@ -136,6 +136,13 @@ celerybeat.pid
 
 # Environments
 .env
+
+# Terraform — contains secrets, never commit
+*.tfvars
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+.terraform/
 .envrc
 .venv
 env/
@@ -205,3 +212,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Local notes
+notes.txt
