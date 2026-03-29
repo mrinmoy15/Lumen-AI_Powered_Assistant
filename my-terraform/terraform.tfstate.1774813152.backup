@@ -1,0 +1,242 @@
+{
+  "version": 4,
+  "terraform_version": "1.14.8",
+  "serial": 64,
+  "lineage": "e9bb01a5-28df-5e61-4e25-9c8b1dc3ab86",
+  "outputs": {},
+  "resources": [
+    {
+      "mode": "managed",
+      "type": "google_project_service",
+      "name": "sqladmin",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "disable_dependent_services": null,
+            "disable_on_destroy": false,
+            "id": "norse-rampart-273715/sqladmin.googleapis.com",
+            "project": "norse-rampart-273715",
+            "service": "sqladmin.googleapis.com",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjYwMDAwMDAwMDAwMCwidXBkYXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_sql_database",
+      "name": "lumen_db",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "charset": "UTF8",
+            "collation": "en_US.UTF8",
+            "deletion_policy": "DELETE",
+            "id": "projects/norse-rampart-273715/instances/lumen-postgres/databases/lumen",
+            "instance": "lumen-postgres",
+            "name": "lumen",
+            "project": "norse-rampart-273715",
+            "self_link": "https://sqladmin.googleapis.com/sql/v1beta4/projects/norse-rampart-273715/instances/lumen-postgres/databases/lumen",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_project_service.sqladmin",
+            "google_sql_database_instance.lumen_postgres"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_sql_database_instance",
+      "name": "lumen_postgres",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "available_maintenance_versions": [],
+            "clone": [],
+            "connection_name": "norse-rampart-273715:us-central1:lumen-postgres",
+            "database_version": "POSTGRES_16",
+            "deletion_protection": false,
+            "dns_name": "",
+            "encryption_key_name": null,
+            "first_ip_address": "35.223.69.173",
+            "id": "lumen-postgres",
+            "instance_type": "CLOUD_SQL_INSTANCE",
+            "ip_address": [
+              {
+                "ip_address": "35.223.69.173",
+                "time_to_retire": "",
+                "type": "PRIMARY"
+              },
+              {
+                "ip_address": "34.28.218.182",
+                "time_to_retire": "",
+                "type": "OUTGOING"
+              }
+            ],
+            "maintenance_version": "POSTGRES_16_13.R20260108.01_20",
+            "master_instance_name": "",
+            "name": "lumen-postgres",
+            "private_ip_address": "",
+            "project": "norse-rampart-273715",
+            "psc_service_attachment_link": "",
+            "public_ip_address": "35.223.69.173",
+            "region": "us-central1",
+            "replica_configuration": [],
+            "restore_backup_context": [],
+            "root_password": null,
+            "self_link": "https://sqladmin.googleapis.com/sql/v1beta4/projects/norse-rampart-273715/instances/lumen-postgres",
+            "server_ca_cert": [
+              {
+                "cert": "-----BEGIN CERTIFICATE-----\nMIIDcTCCAlmgAwIBAgIBADANBgkqhkiG9w0BAQsFADBwMS0wKwYDVQQuEyQ2NGRk\nMzZhNC0wZDdiLTQ2NTUtYTUxMy02YTdlYTJhOTgyNTExHDAaBgNVBAMTE0Nsb3Vk\nIFNRTCBTZXJ2ZXIgQ0ExFDASBgNVBAoTC0dvb2dsZSwgSW5jMQswCQYDVQQGEwJV\nUzAeFw0yNjAzMjkxODE0MzNaFw0zNjAzMjYxODE1MzNaMHAxLTArBgNVBC4TJDY0\nZGQzNmE0LTBkN2ItNDY1NS1hNTEzLTZhN2VhMmE5ODI1MTEcMBoGA1UEAxMTQ2xv\ndWQgU1FMIFNlcnZlciBDQTEUMBIGA1UEChMLR29vZ2xlLCBJbmMxCzAJBgNVBAYT\nAlVTMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlRIUAK8OT96GTmVG\nv4MbbcfMHDuEgTDWOdzrR0nSwNpafqp1+N1wlALzZIUrXBLLAg/TDsm3M4hix6Dl\n1ey7PycPh+v6nNdRBatQ4j9XmjwgWFDTeBqjg4aFslrXA6JwAFbPIEBtw/unTe/1\nNAzu9ob7B6aLKUiVM/YJAtypxOXim2CrLGAbktspL5drIbfXHOLBw4kDMdurQcPq\nK+HPjS09yOWqiIASUqjyvGKQALBxYvvVfcZ6BkZSN/R3CMwO8oebOstK+y/ZwcUY\nU0Fz/VjEWLC7uU6NCv8aeaNfafYL5nuND1wDDhdn2YipkF16imygTb0b8iyzwAk0\ng+BRSQIDAQABoxYwFDASBgNVHRMBAf8ECDAGAQH/AgEAMA0GCSqGSIb3DQEBCwUA\nA4IBAQBrXymlPCMwOm3JQrPGKt/Bnar1iXElGYNoaTlwWv6hjSs5lYrL6fraa59/\nMFkWNz9/7fGyqpx6oUe76KcIsTD2XWvtLlsUJV14Uq5+zhSt8cQxDe09DedeW7E9\nlw7hy4hcW9c+x8S3/T1MbJQpkudZo89T2MGIFWg+9XfCZySqZDSbnUVAKBak6ESB\nlPJ6plFp8/C6KKin36VOcXv+ullrgh/PZsEt6IRnRrIvIAJxxDoEvKJF2b8bm2sk\n/Klp6J+5BXqm2RpUCsmjHF3BOcGaVWKLsok5P2FG7YP6skjiFz1gHKYSdgip5f5U\n9BtAtUxGpuI8Q2vk6kWYvo0Nmgq7\n-----END CERTIFICATE-----",
+                "common_name": "C=US,O=Google\\, Inc,CN=Cloud SQL Server CA,dnQualifier=64dd36a4-0d7b-4655-a513-6a7ea2a98251",
+                "create_time": "2026-03-29T18:14:33.751Z",
+                "expiration_time": "2036-03-26T18:15:33.751Z",
+                "sha1_fingerprint": "922382a4ffe6348fd4f375a880abc31e474a1999"
+              }
+            ],
+            "service_account_email_address": "p599975379718-9wizpo@gcp-sa-cloud-sql.iam.gserviceaccount.com",
+            "settings": [
+              {
+                "activation_policy": "ALWAYS",
+                "active_directory_config": [],
+                "advanced_machine_features": [],
+                "availability_type": "ZONAL",
+                "backup_configuration": [
+                  {
+                    "backup_retention_settings": [
+                      {
+                        "retained_backups": 7,
+                        "retention_unit": "COUNT"
+                      }
+                    ],
+                    "binary_log_enabled": false,
+                    "enabled": false,
+                    "location": "",
+                    "point_in_time_recovery_enabled": false,
+                    "start_time": "08:00",
+                    "transaction_log_retention_days": 7
+                  }
+                ],
+                "collation": "",
+                "connector_enforcement": "NOT_REQUIRED",
+                "data_cache_config": [],
+                "database_flags": [],
+                "deletion_protection_enabled": false,
+                "deny_maintenance_period": [],
+                "disk_autoresize": true,
+                "disk_autoresize_limit": 0,
+                "disk_size": 10,
+                "disk_type": "PD_SSD",
+                "edition": "ENTERPRISE",
+                "enable_dataplex_integration": false,
+                "enable_google_ml_integration": false,
+                "insights_config": [],
+                "ip_configuration": [
+                  {
+                    "allocated_ip_range": "",
+                    "authorized_networks": [],
+                    "enable_private_path_for_google_cloud_services": false,
+                    "ipv4_enabled": true,
+                    "private_network": "",
+                    "psc_config": [],
+                    "require_ssl": false,
+                    "server_ca_mode": "GOOGLE_MANAGED_INTERNAL_CA",
+                    "ssl_mode": ""
+                  }
+                ],
+                "location_preference": [
+                  {
+                    "follow_gae_application": "",
+                    "secondary_zone": "",
+                    "zone": "us-central1-f"
+                  }
+                ],
+                "maintenance_window": [],
+                "password_validation_policy": [],
+                "pricing_plan": "PER_USE",
+                "sql_server_audit_config": [],
+                "tier": "db-f1-micro",
+                "time_zone": "",
+                "user_labels": {},
+                "version": 1
+              }
+            ],
+            "timeouts": null
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "root_password"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "server_ca_cert"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo1NDAwMDAwMDAwMDAwLCJkZWxldGUiOjU0MDAwMDAwMDAwMDAsInVwZGF0ZSI6NTQwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_project_service.sqladmin"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_sql_user",
+      "name": "lumen_user",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "deletion_policy": null,
+            "host": "",
+            "id": "postgres//lumen-postgres",
+            "instance": "lumen-postgres",
+            "name": "postgres",
+            "password": "lumen123",
+            "password_policy": [],
+            "project": "norse-rampart-273715",
+            "sql_server_user_details": [],
+            "timeouts": null,
+            "type": ""
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6NjAwMDAwMDAwMDAwLCJ1cGRhdGUiOjYwMDAwMDAwMDAwMH0sInNjaGVtYV92ZXJzaW9uIjoiMSJ9",
+          "dependencies": [
+            "google_project_service.sqladmin",
+            "google_sql_database_instance.lumen_postgres"
+          ]
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}

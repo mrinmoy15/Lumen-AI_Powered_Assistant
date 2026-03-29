@@ -4,6 +4,7 @@ Module-level:  sync objects (llm, embeddings) created immediately.
 Runtime:       call ``await init_graph()`` once from FastAPI lifespan to
                populate ``chatbot`` and ``checkpointer`` before handling requests.
 """
+import sys
 from functools import partial
 
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -34,14 +35,18 @@ _mcp_client  = None
 
 # ── Async MCP initialiser ─────────────────────────────────────
 async def _init_mcp_tools():
-    client = MultiServerMCPClient({
-        "stock": {
-            "command": "python",
-            "args":    [str(MCP_PATH)],
-            "transport": "stdio",
-        }
-    })
-    return client, await client.get_tools()
+    try:
+        client = MultiServerMCPClient({
+            "stock": {
+                "command": sys.executable,   # always the current Python interpreter
+                "args":    [str(MCP_PATH)],
+                "transport": "stdio",
+            }
+        })
+        return client, await client.get_tools()
+    except Exception as e:
+        print(f"[WARN] MCP stock tool failed to initialize: {e}. Stock prices will be unavailable.")
+        return None, []
 
 
 # ── Graph compiler ────────────────────────────────────────────

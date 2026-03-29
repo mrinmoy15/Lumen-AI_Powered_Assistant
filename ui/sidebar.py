@@ -33,7 +33,10 @@ def stream_response(user_input: str, thread_id: str):
                 if line.startswith("data: "):
                     data = line[6:]
                     if data != "[DONE]":
-                        yield json.loads(data)
+                        try:
+                            yield json.loads(data)
+                        except json.JSONDecodeError:
+                            pass
 
 
 # ── Sidebar render ────────────────────────────────────────────

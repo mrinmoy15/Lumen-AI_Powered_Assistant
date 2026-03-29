@@ -136,6 +136,12 @@ celerybeat.pid
 
 # Environments
 .env
+
+# Terraform — contains secrets, never commit
+*.tfvars
+*.tfstate
+*.tfstate.backup
+.terraform/
 .envrc
 .venv
 env/

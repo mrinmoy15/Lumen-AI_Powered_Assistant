@@ -3,20 +3,19 @@ include .env
 export
 
 # Variables
-IMAGE_NAME = $(DOCKER_USERNAME)/ai-blog-generator
 VERSION = $(APP_VERSION)
 
-.PHONY: build run down logs push clean firebase-install firebase-deploy deploy-image deploy-initial
+.PHONY: build run down logs clean deploy-image deploy-initial destroy
 
-## Build the Docker image
+## Build and start all containers locally
 build:
-	docker-compose up --build
+	docker compose up --build
 
-## Run the container without rebuilding
+## Run containers without rebuilding
 run:
 	docker compose up
 
-## Stop and remove the container
+## Stop and remove containers
 down:
 	docker compose down
 
@@ -24,10 +23,26 @@ down:
 logs:
 	docker compose logs -f
 
-## Push image to Docker Hub
-push:
-	docker compose push
-
-## Remove image locally
+## Remove local image
 clean:
-	docker rmi $(IMAGE_NAME):$(VERSION)
+	docker rmi us-central1-docker.pkg.dev/$(GCP_PROJECT_ID)/lumen/lumen:$(VERSION)
+
+## Build, push to Artifact Registry and deploy updated image to Cloud Run
+deploy-image:
+	powershell -ExecutionPolicy Bypass -File ./new_image_deploy.ps1 \
+		-ProjectId "$(GCP_PROJECT_ID)" \
+		-ProjectNumber "$(GCP_PROJECT_NUMBER)" \
+		-Region "$(GCP_REGION)" \
+		-ImageTag "$(VERSION)"
+
+## Tear down all GCP infrastructure (zero ongoing cost)
+destroy:
+	cd my-terraform && terraform destroy -auto-approve
+
+## First-time full deploy: build, push, Terraform apply
+deploy-initial:
+	powershell -ExecutionPolicy Bypass -File ./new_image_deploy.ps1 \
+		-ProjectId "$(GCP_PROJECT_ID)" \
+		-ProjectNumber "$(GCP_PROJECT_NUMBER)" \
+		-Region "$(GCP_REGION)" \
+		-ImageTag "$(VERSION)"
