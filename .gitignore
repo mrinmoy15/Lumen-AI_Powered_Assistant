@@ -60,6 +60,7 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+chatbot.db*
 
 # Flask stuff:
 instance/
@@ -143,6 +144,7 @@ celerybeat.pid
 *.tfstate.backup
 *.tfstate.*.backup
 .terraform/
+.terraform.tfstate.lock.info
 .envrc
 .venv
 env/
@@ -213,5 +215,5 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# Local notes
-notes.txt
+# streamlit
+.streamlit/secrets.toml

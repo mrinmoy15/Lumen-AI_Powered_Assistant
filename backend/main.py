@@ -22,14 +22,13 @@ async def lifespan(app: FastAPI):
     await init_graph()
 
     yield
-    # (add shutdown cleanup here if needed)
 
 
 app = FastAPI(title="LUMEN API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # tighten to the Streamlit service URL in production
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
