@@ -1,1 +1,1 @@
-"""db — SQLite persistence for thread tracking."""
+"""db — PostgreSQL persistence for thread tracking."""

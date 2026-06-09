@@ -23,12 +23,10 @@ LUMEN is a production-grade conversational AI assistant built with **LangGraph**
 LUMEN uses a **decoupled frontend/backend architecture**:
 
 ```
-User → Firebase Hosting (.web.app URL)
-         ↓
-   Streamlit Frontend (Cloud Run)
-         ↓  HTTP / SSE
+User → Streamlit Frontend (Cloud Run)
+              ↓  HTTP / SSE
    FastAPI Backend (Cloud Run)
-         ↓
+              ↓
    LangGraph Agent (GPT-4o + Tools)
     ├── Pinecone (vector store)
     ├── PostgreSQL / Cloud SQL (conversation history)
@@ -58,8 +56,8 @@ lumen/
 ├── config.py                # All constants, paths, model settings
 ├── requirements.txt
 ├── Dockerfile               # Single image used for both backend and frontend
-├── docker-compose.yml       # Local dev: postgres + backend + frontend
-├── deploy.ps1               # Terraform import + apply + Firebase deploy
+├── compose.yml              # Local dev: postgres + backend + frontend
+├── deploy.ps1               # Terraform import + apply
 ├── new_image_deploy.ps1     # Full: build + push + deploy
 ├── makefile
 │
@@ -135,7 +133,7 @@ ALPHA_VANTAGE_API_KEY=...
 POSTGRES_PASSWORD=lumen123
 DATABASE_URL=postgresql://postgres:lumen123@localhost:5432/lumen
 
-# Backend URL (used by Streamlit frontend)
+# Backend URL (used by the local Streamlit frontend)
 BACKEND_URL=http://localhost:8000
 
 # Makefile / deploy scripts
@@ -200,7 +198,6 @@ THREAD_CLEANUP_DAYS = 7
 - [Terraform](https://developer.hashicorp.com/terraform/install) installed
 - [gcloud CLI](https://cloud.google.com/sdk/docs/install) installed and authenticated
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) running
-- [Firebase CLI](https://firebase.google.com/docs/cli) installed (`make firebase-install`)
 - GCP project created
 - Pinecone index created (see Local Development prerequisites)
 
@@ -232,7 +229,7 @@ The frontend Cloud Run URL is printed to the terminal after deploy completes.
 make deploy-image
 ```
 
-This builds a new Docker image, pushes it to Artifact Registry, and runs `terraform apply` to update the Cloud Run services. Firebase Hosting is skipped (not needed for image updates).
+This builds a new Docker image, pushes it to Artifact Registry, and runs `terraform apply` to update the Cloud Run services.
 
 ### What the deploy scripts do
 
@@ -314,8 +311,12 @@ Stock price lookups use the **Model Context Protocol (MCP)**. `stock_mcp.py` run
 
 ---
 
-## URL 
-`https://lumen-frontend-e5s2hl52sa-uc.a.run.app/`
+## Live URLs
+
+| Service | URL |
+|---|---|
+| **Frontend (Streamlit)** | https://lumen-frontend-eeh43tst7q-uc.a.run.app |
+| **Backend (FastAPI)** | https://lumen-backend-eeh43tst7q-uc.a.run.app |
 
 ## License
 

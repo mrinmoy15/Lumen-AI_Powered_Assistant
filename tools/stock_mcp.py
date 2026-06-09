@@ -98,5 +98,4 @@ async def stock_get_price(params: StockPriceInput) -> str:
 
 
 if __name__ == "__main__":
-    mcp.run()  # stdio transport (for local use)
-    # mcp.run(transport="streamable_http", port=8000)  # uncomment for remote
+    mcp.run()
