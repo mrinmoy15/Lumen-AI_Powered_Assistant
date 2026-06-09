@@ -17,7 +17,7 @@ def confirm_delete_dialog(thread_id: str):
 
     with col2:
         if st.button("Delete", use_container_width=True, key="confirm_delete", type="primary"):
-            httpx.delete(f"{BACKEND_URL}/threads/{thread_id}", timeout=10)
+            httpx.delete(f"{BACKEND_URL}/threads/{thread_id}", timeout=30)
 
             from ui.sidebar import _retrieve_all_threads
             st.session_state["chat_threads"] = _retrieve_all_threads()

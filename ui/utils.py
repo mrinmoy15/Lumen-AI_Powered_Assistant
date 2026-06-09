@@ -22,18 +22,21 @@ def add_thread(thread_id: str, first_message: str):
     thread_entry = {"thread_id": thread_id, "label": first_message}
     if not any(t["thread_id"] == thread_id for t in st.session_state["chat_threads"]):
         st.session_state["chat_threads"].append(thread_entry)
-    httpx.post(
-        f"{BACKEND_URL}/threads",
-        json={"thread_id": thread_id, "label": first_message},
-        timeout=10,
-    )
+    try:
+        httpx.post(
+            f"{BACKEND_URL}/threads",
+            json={"thread_id": thread_id, "label": first_message},
+            timeout=30,
+        )
+    except Exception:
+        pass  # thread is already in session state; persistence failure is non-fatal
 
 
 # ── Message helpers ───────────────────────────────────────────
 def load_conversation(thread_id: str) -> list[dict]:
     """Fetch message history from the backend as a list of role/content dicts."""
     try:
-        resp = httpx.get(f"{BACKEND_URL}/threads/{thread_id}/messages", timeout=10)
+        resp = httpx.get(f"{BACKEND_URL}/threads/{thread_id}/messages", timeout=30)
         resp.raise_for_status()
         return resp.json()
     except Exception:

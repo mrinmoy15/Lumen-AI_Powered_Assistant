@@ -13,7 +13,7 @@ from ui.utils import reset_chat, load_conversation
 # ── Thread listing ────────────────────────────────────────────
 def _retrieve_all_threads() -> list[dict]:
     try:
-        resp = httpx.get(f"{BACKEND_URL}/threads", timeout=10)
+        resp = httpx.get(f"{BACKEND_URL}/threads", timeout=30)
         resp.raise_for_status()
         return resp.json()
     except Exception:
@@ -62,7 +62,7 @@ def _render_document_upload():
     if already_loaded:
         st.sidebar.success(f"📄 **{already_loaded}**")
         if st.sidebar.button("🗑️ Remove document", use_container_width=True, key="remove_doc"):
-            httpx.delete(f"{BACKEND_URL}/threads/{current_tid}/documents", timeout=10)
+            httpx.delete(f"{BACKEND_URL}/threads/{current_tid}/documents", timeout=30)
             del st.session_state["pdf_ingested_threads"][current_tid]
             st.rerun()
         return
