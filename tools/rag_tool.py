@@ -1,4 +1,4 @@
-"""tools/rag_tool.py — LangChain tool for retrieving document context."""
+"""tools/rag_tool.py - LangChain tool for retrieving document context."""
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
 from rag.store import get_retriever, THREAD_METADATA

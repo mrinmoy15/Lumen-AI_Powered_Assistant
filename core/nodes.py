@@ -1,4 +1,4 @@
-"""core/nodes.py — LangGraph node functions."""
+"""core/nodes.py - LangGraph node functions."""
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables import RunnableConfig
 from rag.store import get_retriever, THREAD_METADATA
@@ -17,7 +17,7 @@ async def chat_node(state: ChatState, config: RunnableConfig, llm_with_tools):
     except (KeyError, TypeError):
         thread_id = None
 
-    # Base system message — always present
+    # Base system message - always present
     system_messages = [SystemMessage(content=(
         "You are LUMEN, a helpful and knowledgeable assistant. "
         "Always respond in clear, well-formatted prose. "

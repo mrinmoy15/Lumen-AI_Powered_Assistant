@@ -1,4 +1,4 @@
-"""core/checkpointer.py — Async PostgreSQL checkpointer for LangGraph."""
+"""core/checkpointer.py - Async PostgreSQL checkpointer for LangGraph."""
 from psycopg_pool import AsyncConnectionPool
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from config import DATABASE_URL

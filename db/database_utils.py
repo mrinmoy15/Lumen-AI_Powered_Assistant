@@ -1,4 +1,4 @@
-"""db/database_utils.py — PostgreSQL thread tracker for LUMEN."""
+"""db/database_utils.py - PostgreSQL thread tracker for LUMEN."""
 import os
 import psycopg
 from datetime import datetime, timedelta, timezone

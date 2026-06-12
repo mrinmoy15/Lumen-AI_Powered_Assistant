@@ -12,9 +12,9 @@ provider "google" {
   region  = var.region
 }
 
-# ────────────────────────────────────────
+# ----------------------------------------
 # Enable APIs
-# ────────────────────────────────────────
+# ----------------------------------------
 resource "google_project_service" "cloud_run" {
   service            = "run.googleapis.com"
   disable_on_destroy = false
@@ -42,9 +42,9 @@ resource "google_project_service" "artifact_registry" {
 
 
 
-# ────────────────────────────────────────
-# Secrets — Conditionally Create
-# ────────────────────────────────────────
+# ----------------------------------------
+# Secrets - Conditionally Create
+# ----------------------------------------
 resource "google_secret_manager_secret" "openai_key" {
   count     = var.create_secrets ? 1 : 0
   secret_id = "OPENAI_API_KEY"
@@ -102,13 +102,13 @@ resource "google_secret_manager_secret" "database_url" {
 resource "google_secret_manager_secret_version" "database_url_value" {
   count       = var.create_secrets ? 1 : 0
   secret      = google_secret_manager_secret.database_url[0].id
-  secret_data = "postgresql://postgres:${var.db_password}@/lumen?host=/cloudsql/${var.project_id}:${var.region}:lumen-postgres&sslmode=disable"
+  secret_data = "postgresql://${var.db_user}:${var.db_password}@/${var.app_name}?host=/cloudsql/${var.project_id}:${var.region}:${var.app_name}-postgres&sslmode=disable"
 }
 
 
-# ────────────────────────────────────────
-# Locals — Handle both existing & new secrets
-# ────────────────────────────────────────
+# ----------------------------------------
+# Locals - Handle both existing & new secrets
+# ----------------------------------------
 locals {
   service_account = "${var.project_number}-compute@developer.gserviceaccount.com"
 
@@ -119,9 +119,9 @@ locals {
 }
 
 
-# ────────────────────────────────────────
-# Secret IAM — Grant Cloud Run access
-# ────────────────────────────────────────
+# ----------------------------------------
+# Secret IAM - Grant Cloud Run access
+# ----------------------------------------
 resource "google_secret_manager_secret_iam_member" "openai_access" {
   secret_id = local.openai_secret_id
   role      = "roles/secretmanager.secretAccessor"
@@ -147,17 +147,17 @@ resource "google_secret_manager_secret_iam_member" "database_url_access" {
 }
 
 
-# ────────────────────────────────────────
+# ----------------------------------------
 # Cloud Run Service
-# ────────────────────────────────────────
+# ----------------------------------------
 # Backend service with Cloud SQL connection and secrets
 resource "google_cloud_run_v2_service" "backend" {
-  name     = "lumen-backend"
+  name     = "${var.app_name}-backend"
   location = var.region
 
   template {
     annotations = {
-      "run.googleapis.com/cloudsql-instances" = "${var.project_id}:${var.region}:lumen-postgres"
+      "run.googleapis.com/cloudsql-instances" = "${var.project_id}:${var.region}:${var.app_name}-postgres"
     }
 
     containers {
@@ -173,7 +173,7 @@ resource "google_cloud_run_v2_service" "backend" {
 
       env {
         name  = "PINECONE_INDEX_NAME"
-        value = "lumen-rag"
+        value = var.pinecone_index_name
       }
 
       env {
@@ -231,7 +231,7 @@ resource "google_cloud_run_v2_service" "backend" {
 
 # Frontend service (no secrets needed)
 resource "google_cloud_run_v2_service" "frontend" {
-  name     = "lumen-frontend"
+  name     = "${var.app_name}-frontend"
   location = var.region
 
   template {
@@ -260,12 +260,12 @@ resource "google_cloud_run_v2_service" "frontend" {
 }
 
 
-# ────────────────────────────────────────
+# ----------------------------------------
 # Cloud SQL Service
-# ────────────────────────────────────────
+# ----------------------------------------
 
 resource "google_sql_database_instance" "lumen_postgres" {
-  name             = "lumen-postgres"
+  name             = "${var.app_name}-postgres"
   database_version = "POSTGRES_16"
   region           = var.region
   deletion_protection = false
@@ -278,13 +278,13 @@ resource "google_sql_database_instance" "lumen_postgres" {
 }
 
 resource "google_sql_database" "lumen_db" {
-  name             = "lumen"
+  name             = var.app_name
   instance         = google_sql_database_instance.lumen_postgres.name
   deletion_policy  = "ABANDON"
 }
 
 resource "google_sql_user" "lumen_user" {
-  name            = "postgres"
+  name            = var.db_user
   instance        = google_sql_database_instance.lumen_postgres.name
   password        = var.db_password
   deletion_policy = "ABANDON"
@@ -297,12 +297,12 @@ resource "google_project_iam_member" "cloudsql_client" {
 }
 
 
-# ────────────────────────────────────────
+# ----------------------------------------
 # Artifact Registry
-# ────────────────────────────────────────
+# ----------------------------------------
 
 resource "google_artifact_registry_repository" "lumen" {
-  repository_id = "lumen"
+  repository_id = var.app_name
   format        = "DOCKER"
   location      = var.region
 
@@ -310,10 +310,10 @@ resource "google_artifact_registry_repository" "lumen" {
 }
 
 
-# ────────────────────────────────────────
+# ----------------------------------------
 # Allow unauthenticated access
 # Frontend is public. Backend is invoked by the frontend service account only.
-# ────────────────────────────────────────
+# ----------------------------------------
 resource "google_cloud_run_v2_service_iam_member" "frontend_public" {
   name     = google_cloud_run_v2_service.frontend.name
   location = var.region

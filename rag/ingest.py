@@ -1,4 +1,4 @@
-"""rag/ingest.py — Document loading, chunking and Pinecone indexing."""
+"""rag/ingest.py - Document loading, chunking and Pinecone indexing."""
 import os
 import tempfile
 from typing import Optional
@@ -93,7 +93,7 @@ def ingest_document(
         except Exception:
             pass  # namespace doesn't exist yet on first upload; safe to ignore
 
-        # Each thread gets its own Pinecone namespace — vectors persist across restarts.
+        # Each thread gets its own Pinecone namespace - vectors persist across restarts.
         PineconeVectorStore.from_documents(
             documents=chunks,
             embedding=embeddings,

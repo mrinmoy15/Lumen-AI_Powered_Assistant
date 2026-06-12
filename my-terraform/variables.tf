@@ -39,7 +39,7 @@ variable "alpha_vantage_api_key" {
 }
 
 #========================================================
-# Cloud SQL (new — Postgres)
+# Cloud SQL (new - Postgres)
 variable "db_password" {
   description = "PostgreSQL database password"
   type        = string
@@ -62,6 +62,26 @@ variable "backend_image" {
 variable "frontend_image" {
   description = "Full Artifact Registry path for the frontend image"
   type        = string
+}
+
+#========================================================
+# Application naming
+variable "app_name" {
+  description = "Application name - drives Cloud Run service names, Cloud SQL instance, and Artifact Registry repo"
+  type        = string
+  default     = "lumen"
+}
+
+variable "pinecone_index_name" {
+  description = "Pinecone vector index name (must match PINECONE_INDEX_NAME in .env)"
+  type        = string
+  default     = "lumen-rag"
+}
+
+variable "db_user" {
+  description = "PostgreSQL database username"
+  type        = string
+  default     = "postgres"
 }
 
 #========================================================

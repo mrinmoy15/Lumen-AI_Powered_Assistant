@@ -1,4 +1,4 @@
-"""backend/routers/chat.py — Server-Sent Events streaming chat endpoint."""
+"""backend/routers/chat.py - Server-Sent Events streaming chat endpoint."""
 import json
 
 from fastapi import APIRouter
@@ -22,6 +22,12 @@ async def stream_chat(thread_id: str, body: ChatRequest):
     Each event is:  data: <json-encoded string>\\n\\n
     Final event is: data: [DONE]\\n\\n
     """
+    if graph.chatbot is None:
+        async def not_ready():
+            yield f"data: {json.dumps('[ERROR] Backend not ready - graph not initialized.')}\n\n"
+            yield "data: [DONE]\n\n"
+        return StreamingResponse(not_ready(), media_type="text/event-stream")
+
     config = {
         "configurable": {"thread_id": thread_id},
         "metadata":     {"thread_id": thread_id},
@@ -29,17 +35,20 @@ async def stream_chat(thread_id: str, body: ChatRequest):
     }
 
     async def event_generator():
-        async for chunk, meta in graph.chatbot.astream(
-            {"messages": [HumanMessage(content=body.message)]},
-            config=config,
-            stream_mode="messages",
-        ):
-            if (
-                chunk.content
-                and not isinstance(chunk.content, list)
-                and meta.get("langgraph_node") == "chat_node"
+        try:
+            async for chunk, meta in graph.chatbot.astream(
+                {"messages": [HumanMessage(content=body.message)]},
+                config=config,
+                stream_mode="messages",
             ):
-                yield f"data: {json.dumps(chunk.content)}\n\n"
+                if (
+                    chunk.content
+                    and not isinstance(chunk.content, list)
+                    and meta.get("langgraph_node") == "chat_node"
+                ):
+                    yield f"data: {json.dumps(chunk.content)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps(f'[ERROR] {e}')}\n\n"
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

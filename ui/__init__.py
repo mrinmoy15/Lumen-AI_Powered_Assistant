@@ -1,1 +1,1 @@
-"""ui — Streamlit UI components for LUMEN."""
+"""ui - Streamlit UI components for LUMEN."""

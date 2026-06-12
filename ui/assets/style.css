@@ -1,11 +1,11 @@
 /* ============================================================
-   LangGraph Chatbot — Dark Theme Stylesheet
+   LangGraph Chatbot - Dark Theme Stylesheet
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
-/* ── CSS Variables ────────────────────────────────────────── */
+/* -- CSS Variables ------------------------------------------ */
 :root {
     --bg-deep:          #0d0d14;
     --bg-main:          #13131f;
@@ -22,17 +22,17 @@
     --border-hover:     rgba(124, 106, 247, 0.45);
     --shadow:           0 4px 24px rgba(0, 0, 0, 0.4);
 
-    /* Shared thread row color — used by BOTH label + popover button */
+    /* Shared thread row color - used by BOTH label + popover button */
     --thread-bg:        rgba(124, 106, 247, 0.12);
     --thread-bg-hover:  rgba(124, 106, 247, 0.22);
 }
 
-/* ── Global Reset ─────────────────────────────────────────── */
+/* -- Global Reset ------------------------------------------- */
 * {
     font-family: 'DM Sans', sans-serif !important;
 }
 
-/* ── Fix Material Icons (overridden by global font reset) ─── */
+/* -- Fix Material Icons (overridden by global font reset) --- */
 [data-testid="stIconMaterial"],
 span[data-testid="stIconMaterial"],
 [class*="exvv1vr"],
@@ -53,7 +53,7 @@ span[data-testid="stIconMaterial"],
     -webkit-font-smoothing: antialiased;
 }
 
-/* ── Sidebar toggle button ────────────────────────────────── */
+/* -- Sidebar toggle button ---------------------------------- */
 [data-testid="stSidebarCollapseButton"] button,
 [data-testid="stSidebarCollapsedControl"] button {
     background-color: var(--bg-card) !important;
@@ -95,7 +95,7 @@ span[data-testid="stIconMaterial"],
     line-height: 1 !important;
 }
 
-/* ── App Background ───────────────────────────────────────── */
+/* -- App Background ----------------------------------------- */
 [data-testid="stAppViewContainer"] {
     background-color: var(--bg-main);
     background-image:
@@ -111,7 +111,7 @@ span[data-testid="stIconMaterial"],
     padding-top: 2rem;
 }
 
-/* ── Sidebar ──────────────────────────────────────────────── */
+/* -- Sidebar ------------------------------------------------ */
 [data-testid="stSidebar"] {
     background-color: var(--bg-sidebar) !important;
     border-right: 1px solid var(--border);
@@ -148,7 +148,7 @@ span[data-testid="stIconMaterial"],
     margin-bottom: 0.4rem !important;
 }
 
-/* ── Buttons (global sidebar default) ────────────────────── */
+/* -- Buttons (global sidebar default) ---------------------- */
 .stButton > button {
     width: 100% !important;
     background-color: transparent !important;
@@ -192,7 +192,7 @@ span[data-testid="stIconMaterial"],
     box-shadow: 0 0 16px rgba(124, 106, 247, 0.35) !important;
 }
 
-/* ── Thread Row — merged label + ··· popover button ──────── */
+/* -- Thread Row - merged label + ... popover button -------- */
 
 /* Remove gap + padding between columns */
 [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] {
@@ -223,7 +223,7 @@ span[data-testid="stIconMaterial"],
     transform: none !important;
 }
 
-/* Popover ··· trigger button (right pill) — SAME background as label */
+/* Popover ... trigger button (right pill) - SAME background as label */
 [data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] > div:last-child [data-testid="stPopover"] button {
     background-color: var(--thread-bg) !important;
     border: 1px solid var(--border) !important;
@@ -250,7 +250,7 @@ span[data-testid="stIconMaterial"],
     display: none !important;
 }
 
-/* ── Popover panel — delete button inside ─────────────────── */
+/* -- Popover panel - delete button inside ------------------- */
 [data-testid="stPopover"] .stButton > button {
     background-color: rgba(200, 60, 60, 0.08) !important;
     border: 1px solid rgba(200, 60, 60, 0.25) !important;
@@ -267,7 +267,7 @@ span[data-testid="stIconMaterial"],
     transform: none !important;
 }
 
-/* ── Chat Messages ────────────────────────────────────────── */
+/* -- Chat Messages ------------------------------------------ */
 [data-testid="stChatMessage"] {
     background-color: var(--bg-card) !important;
     border: 1px solid var(--border) !important;
@@ -292,7 +292,7 @@ span[data-testid="stIconMaterial"],
     line-height: 1.65 !important;
 }
 
-/* ── Chat Input ───────────────────────────────────────────── */
+/* -- Chat Input --------------------------------------------- */
 [data-testid="stChatInput"] {
     background-color: var(--bg-input) !important;
     border: 1px solid var(--border) !important;
@@ -329,19 +329,19 @@ span[data-testid="stIconMaterial"],
     box-shadow: 0 0 12px var(--accent-glow) !important;
 }
 
-/* ── Scrollbar ────────────────────────────────────────────── */
+/* -- Scrollbar ---------------------------------------------- */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg-deep); }
 ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-/* ── Markdown / Text ──────────────────────────────────────── */
+/* -- Markdown / Text ---------------------------------------- */
 .stMarkdown p, .stMarkdown li {
     color: var(--text-secondary) !important;
     font-size: 0.88rem !important;
 }
 
-/* ── Hide Streamlit Branding ──────────────────────────────── */
+/* -- Hide Streamlit Branding -------------------------------- */
 #MainMenu { visibility: hidden; }
 footer    { visibility: hidden; }
 
@@ -350,7 +350,7 @@ footer    { visibility: hidden; }
     border-bottom: none !important;
 }
 
-/* ── Sidebar Collapse / Expand Button ─────────────────────── */
+/* -- Sidebar Collapse / Expand Button ----------------------- */
 [data-testid="stSidebarCollapseButton"],
 [data-testid="stSidebarCollapsedControl"] {
     visibility: visible !important;

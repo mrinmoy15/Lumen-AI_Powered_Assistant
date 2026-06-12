@@ -5,7 +5,7 @@ export
 # Variables
 VERSION = $(APP_VERSION)
 
-.PHONY: build run down logs clean deploy-image deploy-initial destroy
+.PHONY: build run down logs clean bootstrap-gcp deploy-image destroy
 
 ## Build and start all containers locally
 build:
@@ -23,26 +23,27 @@ down:
 logs:
 	docker compose logs -f
 
-## Remove local image
+## Remove local image from Artifact Registry cache
 clean:
-	docker rmi us-central1-docker.pkg.dev/$(GCP_PROJECT_ID)/lumen/lumen:$(VERSION)
+	docker rmi $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(APP_NAME)/$(APP_NAME):$(VERSION)
 
-## Build, push to Artifact Registry and deploy updated image to Cloud Run
+## One-time: create GCP project, link billing, grant deployer owner IAM
+## If your account cannot link billing (org-managed), use: make bootstrap-gcp SKIP_BILLING=1
+bootstrap-gcp:
+	powershell -ExecutionPolicy Bypass -File ./my-terraform/bootstrap.ps1 \
+		-ProjectId "$(GCP_PROJECT_ID)" \
+		-BillingAccount "$(BILLING_ACCOUNT)" \
+		$(if $(SKIP_BILLING),-SkipBilling,)
+
+## Build image, push to Artifact Registry, and deploy to Cloud Run via Terraform
 deploy-image:
-	powershell -ExecutionPolicy Bypass -File ./new_image_deploy.ps1 \
+	powershell -ExecutionPolicy Bypass -File ./deploy.ps1 \
 		-ProjectId "$(GCP_PROJECT_ID)" \
 		-ProjectNumber "$(GCP_PROJECT_NUMBER)" \
 		-Region "$(GCP_REGION)" \
-		-ImageTag "$(VERSION)"
+		-ImageTag "$(VERSION)" \
+		-AppName "$(APP_NAME)"
 
 ## Tear down all GCP infrastructure (zero ongoing cost)
 destroy:
 	cd my-terraform && terraform destroy -auto-approve
-
-## First-time full deploy: build, push, Terraform apply
-deploy-initial:
-	powershell -ExecutionPolicy Bypass -File ./new_image_deploy.ps1 \
-		-ProjectId "$(GCP_PROJECT_ID)" \
-		-ProjectNumber "$(GCP_PROJECT_NUMBER)" \
-		-Region "$(GCP_REGION)" \
-		-ImageTag "$(VERSION)"
