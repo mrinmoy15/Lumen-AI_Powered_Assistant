@@ -25,7 +25,7 @@ logs:
 
 ## Remove local image from Artifact Registry cache
 clean:
-	docker rmi us-central1-docker.pkg.dev/$(GCP_PROJECT_ID)/lumen/lumen:$(VERSION)
+	docker rmi $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(APP_NAME)/$(APP_NAME):$(VERSION)
 
 ## One-time: create GCP project, link billing, grant deployer owner IAM
 ## If your account cannot link billing (org-managed), use: make bootstrap-gcp SKIP_BILLING=1
