@@ -1,4 +1,4 @@
-"""core/state.py — LangGraph state schema."""
+"""core/state.py - LangGraph state schema."""
 from typing import Annotated
 from typing_extensions import TypedDict
 from langchain_core.messages import BaseMessage

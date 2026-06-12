@@ -1,4 +1,4 @@
-"""ui/chat.py — Main chat area: welcome screen, message history, input."""
+"""ui/chat.py - Main chat area: welcome screen, message history, input."""
 import streamlit as st
 
 from ui.utils import load_html, add_thread

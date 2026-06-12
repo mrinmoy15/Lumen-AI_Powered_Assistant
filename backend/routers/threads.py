@@ -1,4 +1,4 @@
-"""backend/routers/threads.py — Thread CRUD + message history endpoints."""
+"""backend/routers/threads.py - Thread CRUD + message history endpoints."""
 from fastapi import APIRouter
 from pydantic import BaseModel
 from langchain_core.messages import HumanMessage

@@ -1,4 +1,4 @@
-"""ui/dialogs.py — Streamlit dialog definitions."""
+"""ui/dialogs.py - Streamlit dialog definitions."""
 import httpx
 import streamlit as st
 

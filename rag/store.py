@@ -1,11 +1,11 @@
-"""rag/store.py — Per-thread RAG metadata store backed by Pinecone namespaces."""
+"""rag/store.py - Per-thread RAG metadata store backed by Pinecone namespaces."""
 import os
 from typing import Any, Dict, Optional
 
 from langchain_pinecone import PineconeVectorStore
 from config import RETRIEVER_K, PINECONE_INDEX_NAME
 
-# In-memory metadata (filename, filetype, etc.) — survives for the session.
+# In-memory metadata (filename, filetype, etc.) - survives for the session.
 # The actual vectors live in Pinecone under a namespace keyed by thread_id.
 THREAD_METADATA: Dict[str, dict] = {}
 

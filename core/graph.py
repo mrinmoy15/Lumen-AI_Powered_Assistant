@@ -1,4 +1,4 @@
-"""core/graph.py — LangGraph chatbot graph builder.
+"""core/graph.py - LangGraph chatbot graph builder.
 
 Module-level:  sync objects (llm, embeddings) created immediately.
 Runtime:       call ``await init_graph()`` once from FastAPI lifespan to
@@ -21,19 +21,19 @@ from tools.search_tool import search_tool
 from rag.store import init_store
 
 
-# ── Sync models (created at import time) ─────────────────────
+# -- Sync models (created at import time) ---------------------
 llm        = ChatOpenAI(model=LLM_MODEL, temperature=LLM_TEMPERATURE)
 embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL)
 init_store(embeddings)   # wire embeddings into the PGVector retriever store
 
 
-# ── Populated by init_graph() — None until then ───────────────
+# -- Populated by init_graph() - None until then ---------------
 chatbot      = None
 checkpointer = None
 _mcp_client  = None
 
 
-# ── Async MCP initialiser ─────────────────────────────────────
+# -- Async MCP initialiser -------------------------------------
 async def _init_mcp_tools():
     try:
         client = MultiServerMCPClient({
@@ -49,7 +49,7 @@ async def _init_mcp_tools():
         return None, []
 
 
-# ── Graph compiler ────────────────────────────────────────────
+# -- Graph compiler --------------------------------------------
 def _compile_graph(checkpointer_obj, all_tools):
     llm_with_tools  = llm.bind_tools(all_tools)
     bound_chat_node = partial(chat_node, llm_with_tools=llm_with_tools)
@@ -65,7 +65,7 @@ def _compile_graph(checkpointer_obj, all_tools):
     return graph.compile(checkpointer=checkpointer_obj)
 
 
-# ── Public async init (called from FastAPI lifespan) ──────────
+# -- Public async init (called from FastAPI lifespan) ----------
 async def init_graph():
     """Initialise checkpointer, MCP tools, and compiled chatbot graph.
 

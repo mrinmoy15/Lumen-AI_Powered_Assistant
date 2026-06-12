@@ -43,7 +43,7 @@ Write-Host "  Deployer: $DEPLOYER"
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# ── 1. Check / create project ─────────────────────────────────────────────────
+# -- 1. Check / create project -------------------------------------------------
 Write-Host "[PROJECT] Checking if project '$PROJECT_ID' already exists..." -ForegroundColor Yellow
 $existing = gcloud projects describe $PROJECT_ID --format="value(projectId)" 2>$null
 if ($existing -eq $PROJECT_ID) {
@@ -63,7 +63,7 @@ if ($existing -eq $PROJECT_ID) {
     Write-Host "[OK] Project created." -ForegroundColor Green
 }
 
-# ── 2. Link billing account ───────────────────────────────────────────────────
+# -- 2. Link billing account ---------------------------------------------------
 if ($SkipBilling) {
     Write-Host "[SKIP] Skipping billing link (-SkipBilling set)." -ForegroundColor Yellow
     Write-Host "  ACTION REQUIRED: Ask your org/billing admin to run:"
@@ -93,7 +93,7 @@ if ($SkipBilling) {
     Write-Host "[OK] Billing account linked." -ForegroundColor Green
 }
 
-# ── 3. Grant deployer roles/owner ─────────────────────────────────────────────
+# -- 3. Grant deployer roles/owner ---------------------------------------------
 # Owner is required so Terraform can self-manage IAM, enable APIs, create
 # Cloud SQL, Artifact Registry, Secret Manager secrets, and Cloud Run services.
 Write-Host "[IAM] Granting roles/owner to '$DEPLOYER'..." -ForegroundColor Yellow
@@ -106,7 +106,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host "[OK] roles/owner granted to $DEPLOYER." -ForegroundColor Green
 
-# ── 4. Enable core APIs needed before Terraform init ─────────────────────────
+# -- 4. Enable core APIs needed before Terraform init -------------------------
 # Terraform itself needs these APIs to exist before it can plan/apply.
 Write-Host "[APIs] Enabling prerequisite APIs..." -ForegroundColor Yellow
 $apis = @(
@@ -120,7 +120,7 @@ foreach ($api in $apis) {
 }
 Write-Host "[OK] Prerequisite APIs enabled." -ForegroundColor Green
 
-# ── 5. Summary ────────────────────────────────────────────────────────────────
+# -- 5. Summary ----------------------------------------------------------------
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "   Bootstrap complete!                  " -ForegroundColor Green

@@ -39,7 +39,7 @@ variable "alpha_vantage_api_key" {
 }
 
 #========================================================
-# Cloud SQL (new — Postgres)
+# Cloud SQL (new - Postgres)
 variable "db_password" {
   description = "PostgreSQL database password"
   type        = string
@@ -67,7 +67,7 @@ variable "frontend_image" {
 #========================================================
 # Application naming
 variable "app_name" {
-  description = "Application name — drives Cloud Run service names, Cloud SQL instance, and Artifact Registry repo"
+  description = "Application name - drives Cloud Run service names, Cloud SQL instance, and Artifact Registry repo"
   type        = string
   default     = "lumen"
 }

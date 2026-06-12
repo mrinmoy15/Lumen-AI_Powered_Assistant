@@ -1,4 +1,4 @@
-"""ui/sidebar.py — Sidebar rendering: new chat, document upload, conversation list."""
+"""ui/sidebar.py - Sidebar rendering: new chat, document upload, conversation list."""
 import json
 import os
 
@@ -10,7 +10,7 @@ from rag.ingest import SUPPORTED_EXTENSIONS
 from ui.utils import reset_chat, load_conversation
 
 
-# ── Thread listing ────────────────────────────────────────────
+# -- Thread listing --------------------------------------------
 def _retrieve_all_threads() -> list[dict]:
     try:
         resp = httpx.get(f"{BACKEND_URL}/threads", timeout=30)
@@ -20,26 +20,32 @@ def _retrieve_all_threads() -> list[dict]:
         return []
 
 
-# ── Streaming helper (consumed by chat.py via st.write_stream) ─
+# -- Streaming helper (consumed by chat.py via st.write_stream) -
 def stream_response(user_input: str, thread_id: str):
     """POST to /threads/{thread_id}/chat and yield SSE chunks one by one."""
-    with httpx.Client(timeout=None) as client:
-        with client.stream(
-            "POST",
-            f"{BACKEND_URL}/threads/{thread_id}/chat",
-            json={"message": user_input},
-        ) as response:
-            for line in response.iter_lines():
-                if line.startswith("data: "):
-                    data = line[6:]
-                    if data != "[DONE]":
-                        try:
-                            yield json.loads(data)
-                        except json.JSONDecodeError:
-                            pass
+    try:
+        with httpx.Client(timeout=None) as client:
+            with client.stream(
+                "POST",
+                f"{BACKEND_URL}/threads/{thread_id}/chat",
+                json={"message": user_input},
+            ) as response:
+                if response.status_code != 200:
+                    yield f"[Error {response.status_code}: backend request failed]"
+                    return
+                for line in response.iter_lines():
+                    if line.startswith("data: "):
+                        data = line[6:]
+                        if data != "[DONE]":
+                            try:
+                                yield json.loads(data)
+                            except json.JSONDecodeError:
+                                pass
+    except Exception as e:
+        yield f"[Connection error: {e}]"
 
 
-# ── Sidebar render ────────────────────────────────────────────
+# -- Sidebar render --------------------------------------------
 def render_sidebar():
     st.sidebar.title("Chatbot Powered by LangGraph")
 
@@ -97,7 +103,7 @@ def _render_document_upload():
             result = resp.json()
             st.session_state["pdf_ingested_threads"][current_tid] = uploaded.name
             status.update(
-                label=f"✅ Ready — {result['chunks']} chunks indexed",
+                label=f"✅ Ready - {result['chunks']} chunks indexed",
                 state="complete",
             )
         except Exception as e:
@@ -122,7 +128,7 @@ def _render_conversation_list():
                 st.session_state["message_history"] = load_conversation(tid)
 
         with col2:
-            with st.popover("···", use_container_width=True):
+            with st.popover("...", use_container_width=True):
                 if st.button("🗑️ Delete", key=f"delete_{tid}", use_container_width=True):
                     st.session_state["pending_delete_thread_id"] = tid
                     st.rerun()

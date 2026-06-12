@@ -1,4 +1,4 @@
-"""ui/utils.py — Streamlit UI helper utilities."""
+"""ui/utils.py - Streamlit UI helper utilities."""
 import uuid
 import httpx
 import streamlit as st
@@ -6,12 +6,12 @@ import streamlit as st
 from config import CSS_PATH, HTML_PATH, BACKEND_URL
 
 
-# ── Thread ID ────────────────────────────────────────────────
+# -- Thread ID ------------------------------------------------
 def generate_thread_id() -> str:
     return str(uuid.uuid4())
 
 
-# ── Session state helpers ─────────────────────────────────────
+# -- Session state helpers -------------------------------------
 def reset_chat():
     st.session_state["thread_id"]       = generate_thread_id()
     st.session_state["message_history"] = []
@@ -32,7 +32,7 @@ def add_thread(thread_id: str, first_message: str):
         pass  # thread is already in session state; persistence failure is non-fatal
 
 
-# ── Message helpers ───────────────────────────────────────────
+# -- Message helpers -------------------------------------------
 def load_conversation(thread_id: str) -> list[dict]:
     """Fetch message history from the backend as a list of role/content dicts."""
     try:
@@ -43,7 +43,7 @@ def load_conversation(thread_id: str) -> list[dict]:
         return []
 
 
-# ── Asset loaders ─────────────────────────────────────────────
+# -- Asset loaders ---------------------------------------------
 def load_css(path=None):
     file = path or CSS_PATH
     with open(file, "r", encoding="utf-8") as f:

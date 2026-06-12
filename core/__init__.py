@@ -1,1 +1,1 @@
-"""core — LangGraph graph, nodes, state and checkpointer."""
+"""core - LangGraph graph, nodes, state and checkpointer."""

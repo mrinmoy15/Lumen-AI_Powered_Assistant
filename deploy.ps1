@@ -36,7 +36,7 @@ Write-Host ""
 if (-not (Test-Path $terraformDir)) { Write-Host "[ERROR] my-terraform/ not found" -ForegroundColor Red; exit 1 }
 if (-not (Test-Path $tfvarsPath))   { Write-Host "[ERROR] terraform.tfvars not found" -ForegroundColor Red; exit 1 }
 
-# ── Read secrets from environment ─────────────────────────────────────────────
+# -- Read secrets from environment ---------------------------------------------
 $openaiKey       = $env:OPENAI_API_KEY
 $pineconeKey     = $env:PINECONE_API_KEY
 $alphaVantageKey = $env:ALPHA_VANTAGE_API_KEY
@@ -63,19 +63,19 @@ $tfVars = @(
     "-var", "db_password=$dbPassword"
 )
 
-# ── Step 1 — Set GCP project ──────────────────────────────────────────────────
+# -- Step 1 - Set GCP project --------------------------------------------------
 Write-Host "[GCP] Setting active project to $ProjectId..." -ForegroundColor Yellow
 gcloud config set project $ProjectId
 if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] Failed to set GCP project" -ForegroundColor Red; exit 1 }
 Write-Host "[OK] GCP project set" -ForegroundColor Green
 
-# ── Step 2 — Enable Artifact Registry API ────────────────────────────────────
+# -- Step 2 - Enable Artifact Registry API ------------------------------------
 Write-Host ""
 Write-Host "[API] Enabling Artifact Registry API..." -ForegroundColor Yellow
 gcloud services enable artifactregistry.googleapis.com --project=$ProjectId --quiet
 Write-Host "[OK] Artifact Registry API ready" -ForegroundColor Green
 
-# ── Step 3 — Ensure Artifact Registry repo exists ────────────────────────────
+# -- Step 3 - Ensure Artifact Registry repo exists ----------------------------
 Write-Host ""
 Write-Host "[REGISTRY] Checking Artifact Registry repository '$AppName'..." -ForegroundColor Yellow
 $repoExists = gcloud artifacts repositories describe $AppName --location=$Region --project=$ProjectId 2>$null
@@ -91,7 +91,7 @@ if ($repoExists) {
     Write-Host "[OK] Repository created" -ForegroundColor Green
 }
 
-# ── Step 4 — Docker auth, build, push ────────────────────────────────────────
+# -- Step 4 - Docker auth, build, push ----------------------------------------
 Write-Host ""
 Write-Host "[AUTH] Configuring Docker for Artifact Registry..." -ForegroundColor Yellow
 gcloud auth configure-docker $RegistryHost --quiet
@@ -110,7 +110,7 @@ docker push $FullImageName
 if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] Docker push failed" -ForegroundColor Red; exit 1 }
 Write-Host "[OK] Push successful" -ForegroundColor Green
 
-# ── Step 5 — Terraform init ───────────────────────────────────────────────────
+# -- Step 5 - Terraform init ---------------------------------------------------
 Set-Location $terraformDir
 Write-Host ""
 Write-Host "[INIT] Initializing Terraform..." -ForegroundColor Yellow
@@ -118,13 +118,13 @@ terraform init
 if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] Terraform init failed" -ForegroundColor Red; exit 1 }
 Write-Host "[OK] Terraform init successful" -ForegroundColor Green
 
-# ── Step 6 — Import Artifact Registry repo ────────────────────────────────────
+# -- Step 6 - Import Artifact Registry repo ------------------------------------
 Write-Host ""
 Write-Host "[IMPORT] Importing Artifact Registry repo into Terraform state..." -ForegroundColor Yellow
 terraform import @tfVars google_artifact_registry_repository.lumen "projects/$ProjectId/locations/$Region/repositories/$AppName" 2>$null
 Write-Host "[OK] Done (skipped if already in state)" -ForegroundColor Green
 
-# ── Step 7 — Enable Cloud SQL API + import instance ──────────────────────────
+# -- Step 7 - Enable Cloud SQL API + import instance --------------------------
 Write-Host ""
 Write-Host "[API] Enabling Cloud SQL API..." -ForegroundColor Yellow
 gcloud services enable sqladmin.googleapis.com --project=$ProjectId --quiet
@@ -140,7 +140,7 @@ if ($sqlExists) {
     Write-Host "[NEW] Instance does not exist -- Terraform will create it" -ForegroundColor Blue
 }
 
-# ── Step 8 — Import Cloud Run services ───────────────────────────────────────
+# -- Step 8 - Import Cloud Run services ---------------------------------------
 Write-Host ""
 Write-Host "[CHECK] Checking Cloud Run services..." -ForegroundColor Yellow
 $backendExists = gcloud run services describe "$AppName-backend" --region=$Region --project=$ProjectId 2>$null
@@ -159,7 +159,7 @@ if ($frontendExists) {
     Write-Host "[NEW] Frontend does not exist -- Terraform will create it" -ForegroundColor Blue
 }
 
-# ── Step 9 — Import Secrets ───────────────────────────────────────────────────
+# -- Step 9 - Import Secrets ---------------------------------------------------
 Write-Host ""
 Write-Host "[CHECK] Checking secrets in Terraform state..." -ForegroundColor Yellow
 $secretInState = terraform state list 2>$null | Select-String "google_secret_manager_secret.openai_key"
@@ -179,7 +179,7 @@ if (-not $secretInState) {
     Write-Host "[OK] Secrets already in Terraform state -- skipping" -ForegroundColor Green
 }
 
-# ── Step 10 — Terraform apply ─────────────────────────────────────────────────
+# -- Step 10 - Terraform apply -------------------------------------------------
 Write-Host ""
 Write-Host "[DEPLOY] Running terraform apply..." -ForegroundColor Yellow
 terraform apply -auto-approve @tfVars

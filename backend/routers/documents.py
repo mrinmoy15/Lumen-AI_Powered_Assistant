@@ -1,4 +1,4 @@
-"""backend/routers/documents.py — Document upload and removal endpoints."""
+"""backend/routers/documents.py - Document upload and removal endpoints."""
 import os
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
