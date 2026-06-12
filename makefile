@@ -37,7 +37,7 @@ bootstrap-gcp:
 
 ## Build image, push to Artifact Registry, and deploy to Cloud Run via Terraform
 deploy-image:
-	powershell -ExecutionPolicy Bypass -File ./new_image_deploy.ps1 \
+	powershell -ExecutionPolicy Bypass -File ./deploy.ps1 \
 		-ProjectId "$(GCP_PROJECT_ID)" \
 		-ProjectNumber "$(GCP_PROJECT_NUMBER)" \
 		-Region "$(GCP_REGION)" \
