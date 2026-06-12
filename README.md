@@ -196,9 +196,8 @@ THREAD_CLEANUP_DAYS = 7
 ### Prerequisites
 
 - [Terraform](https://developer.hashicorp.com/terraform/install) installed
-- [gcloud CLI](https://cloud.google.com/sdk/docs/install) installed and authenticated
+- [gcloud CLI](https://cloud.google.com/sdk/docs/install) installed and authenticated (`gcloud auth login`)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) running
-- GCP project created
 - Pinecone index created (see Local Development prerequisites)
 
 ### Infrastructure overview
@@ -210,40 +209,86 @@ Terraform provisions:
 - **Cloud Run (backend)** — FastAPI service
 - **Cloud Run (frontend)** — Streamlit service (public URL printed after deploy)
 
-### First-time deployment
+### Step 1 — Fill in `.env`
 
-```bash
-# 1. Authenticate with GCP (one-time)
-gcloud auth login
-gcloud auth application-default login
+Add the following cloud-specific values to your `.env` file:
 
-# 2. Full deploy: build image, push to Artifact Registry, Terraform apply
-make deploy-initial
+```env
+GCP_PROJECT_ID=your-project-id
+GCP_PROJECT_NUMBER=your-project-number
+GCP_REGION=us-central1
+BILLING_ACCOUNT=XXXXXX-XXXXXX-XXXXXX   # find at console.cloud.google.com/billing
+APP_VERSION=1.0.0
 ```
 
-The frontend Cloud Run URL is printed to the terminal after deploy completes.
+### Step 2 — Bootstrap the GCP project (run once)
 
-### Deploy a new image (subsequent updates)
+Creates the GCP project, links billing, and grants your account `roles/owner` so Terraform can provision all resources.
+
+```bash
+make bootstrap-gcp
+```
+
+If your account cannot link billing (org-managed billing accounts), use:
+
+```bash
+make bootstrap-gcp SKIP_BILLING=1
+```
+
+Then link billing manually via the GCP Console or ask your billing admin, and re-run `make bootstrap-gcp SKIP_BILLING=1` to complete IAM setup.
+
+### Step 3 — Authenticate for Terraform
+
+```bash
+gcloud auth application-default login
+```
+
+### Step 4 — Deploy
+
+Builds the Docker image, pushes it to Artifact Registry, and runs `terraform apply` to provision all infrastructure.
 
 ```bash
 make deploy-image
 ```
 
-This builds a new Docker image, pushes it to Artifact Registry, and runs `terraform apply` to update the Cloud Run services.
+The frontend Cloud Run URL is printed to the terminal after deploy completes.
+
+### Subsequent deploys (code changes)
+
+```bash
+make deploy-image
+```
+
+Same command — builds a new image, pushes, and Terraform updates the Cloud Run services in place.
 
 ### What the deploy scripts do
 
-**`new_image_deploy.ps1`** (called by both make commands):
-1. Authenticates Docker with Artifact Registry
-2. Builds the Docker image
-3. Pushes to Artifact Registry
-4. Calls `deploy.ps1`
+**`my-terraform/bootstrap.ps1`** (called by `make bootstrap-gcp`):
+1. Creates the GCP project if it does not exist
+2. Links the billing account
+3. Grants `roles/owner` to the deployer account
+4. Enables prerequisite APIs (`cloudresourcemanager`, `iam`, `serviceusage`)
+
+**`new_image_deploy.ps1`** (called by `make deploy-image`):
+1. Ensures the Artifact Registry repository exists
+2. Authenticates Docker with Artifact Registry
+3. Builds the Docker image
+4. Pushes to Artifact Registry
+5. Calls `deploy.ps1`
 
 **`deploy.ps1`**:
 1. Sets the active GCP project
 2. Runs `terraform init`
 3. Imports any pre-existing Cloud SQL / Cloud Run / Secrets into Terraform state
 4. Runs `terraform apply`
+
+### Tear down
+
+To destroy all GCP infrastructure and stop all billing:
+
+```bash
+make destroy
+```
 
 ### Cloud SQL connection
 

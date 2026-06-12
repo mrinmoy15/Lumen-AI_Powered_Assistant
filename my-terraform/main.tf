@@ -102,7 +102,7 @@ resource "google_secret_manager_secret" "database_url" {
 resource "google_secret_manager_secret_version" "database_url_value" {
   count       = var.create_secrets ? 1 : 0
   secret      = google_secret_manager_secret.database_url[0].id
-  secret_data = "postgresql://postgres:${var.db_password}@/lumen?host=/cloudsql/${var.project_id}:${var.region}:lumen-postgres&sslmode=disable"
+  secret_data = "postgresql://${var.db_user}:${var.db_password}@/${var.app_name}?host=/cloudsql/${var.project_id}:${var.region}:${var.app_name}-postgres&sslmode=disable"
 }
 
 
@@ -152,12 +152,12 @@ resource "google_secret_manager_secret_iam_member" "database_url_access" {
 # ────────────────────────────────────────
 # Backend service with Cloud SQL connection and secrets
 resource "google_cloud_run_v2_service" "backend" {
-  name     = "lumen-backend"
+  name     = "${var.app_name}-backend"
   location = var.region
 
   template {
     annotations = {
-      "run.googleapis.com/cloudsql-instances" = "${var.project_id}:${var.region}:lumen-postgres"
+      "run.googleapis.com/cloudsql-instances" = "${var.project_id}:${var.region}:${var.app_name}-postgres"
     }
 
     containers {
@@ -173,7 +173,7 @@ resource "google_cloud_run_v2_service" "backend" {
 
       env {
         name  = "PINECONE_INDEX_NAME"
-        value = "lumen-rag"
+        value = var.pinecone_index_name
       }
 
       env {
@@ -231,7 +231,7 @@ resource "google_cloud_run_v2_service" "backend" {
 
 # Frontend service (no secrets needed)
 resource "google_cloud_run_v2_service" "frontend" {
-  name     = "lumen-frontend"
+  name     = "${var.app_name}-frontend"
   location = var.region
 
   template {
@@ -265,7 +265,7 @@ resource "google_cloud_run_v2_service" "frontend" {
 # ────────────────────────────────────────
 
 resource "google_sql_database_instance" "lumen_postgres" {
-  name             = "lumen-postgres"
+  name             = "${var.app_name}-postgres"
   database_version = "POSTGRES_16"
   region           = var.region
   deletion_protection = false
@@ -278,13 +278,13 @@ resource "google_sql_database_instance" "lumen_postgres" {
 }
 
 resource "google_sql_database" "lumen_db" {
-  name             = "lumen"
+  name             = var.app_name
   instance         = google_sql_database_instance.lumen_postgres.name
   deletion_policy  = "ABANDON"
 }
 
 resource "google_sql_user" "lumen_user" {
-  name            = "postgres"
+  name            = var.db_user
   instance        = google_sql_database_instance.lumen_postgres.name
   password        = var.db_password
   deletion_policy = "ABANDON"
@@ -302,7 +302,7 @@ resource "google_project_iam_member" "cloudsql_client" {
 # ────────────────────────────────────────
 
 resource "google_artifact_registry_repository" "lumen" {
-  repository_id = "lumen"
+  repository_id = var.app_name
   format        = "DOCKER"
   location      = var.region
 

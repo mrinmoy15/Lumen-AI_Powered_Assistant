@@ -65,6 +65,26 @@ variable "frontend_image" {
 }
 
 #========================================================
+# Application naming
+variable "app_name" {
+  description = "Application name — drives Cloud Run service names, Cloud SQL instance, and Artifact Registry repo"
+  type        = string
+  default     = "lumen"
+}
+
+variable "pinecone_index_name" {
+  description = "Pinecone vector index name (must match PINECONE_INDEX_NAME in .env)"
+  type        = string
+  default     = "lumen-rag"
+}
+
+variable "db_user" {
+  description = "PostgreSQL database username"
+  type        = string
+  default     = "postgres"
+}
+
+#========================================================
 # Other configuration
 variable "create_secrets" {
   description = "Set to false if secrets already exist in GCP Secret Manager"
