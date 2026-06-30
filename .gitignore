@@ -215,5 +215,7 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# streamlit
-.streamlit/secrets.toml
+# Frontend (Node.js / Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local

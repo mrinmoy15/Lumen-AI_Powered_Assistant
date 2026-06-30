@@ -1,6 +1,6 @@
 # LUMEN - AI-Powered Assistant
 
-LUMEN is a production-grade conversational AI assistant built with **LangGraph**, **FastAPI**, and **Streamlit**. It combines real-time web search, live stock data via MCP, and per-thread document RAG into a single polished chat interface with persistent conversation history.
+LUMEN is a production-grade conversational AI assistant built with **LangGraph**, **FastAPI**, and **React + TypeScript**. It combines real-time web search, live stock data via MCP, and per-thread document RAG into a polished chat interface with persistent conversation history.
 
 ---
 
@@ -14,25 +14,25 @@ LUMEN is a production-grade conversational AI assistant built with **LangGraph**
 | **Persistent Memory** | Conversations saved to PostgreSQL and fully resumable across sessions |
 | **Multi-format Documents** | Supports PDF, DOCX, DOC, TXT, CSV, and PPTX |
 | **Auto Cleanup** | Threads older than 7 days are automatically purged |
-| **Dark UI** | Custom dark theme with a polished sidebar and chat interface |
+| **Dark UI** | Custom dark theme built with Tailwind CSS and shadcn/ui |
 
 ---
 
 ## Architecture
 
-LUMEN uses a **decoupled frontend/backend architecture**:
-
 ```
-User -> Streamlit Frontend (Cloud Run)
-              v  HTTP / SSE
+User -> React SPA (nginx, Cloud Run)
+              |  fetch() + SSE streaming
    FastAPI Backend (Cloud Run)
-              v
+              |
    LangGraph Agent (GPT-4o + Tools)
     +-- Pinecone (vector store)
     +-- PostgreSQL / Cloud SQL (conversation history)
     +-- DuckDuckGo (web search)
     +-- Alpha Vantage MCP (stock prices)
 ```
+
+The frontend is a static React/Vite SPA served by nginx. At container startup, `entrypoint.sh` injects `BACKEND_URL` into `index.html` so the browser can reach the backend at runtime without a build-time bake-in.
 
 ### API Endpoints
 
@@ -52,53 +52,64 @@ User -> Streamlit Frontend (Cloud Run)
 
 ```
 lumen/
-+-- app.py                   # Streamlit frontend entry point
-+-- config.py                # All constants, paths, model settings
-+-- requirements.txt
-+-- Dockerfile               # Single image used for both backend and frontend
-+-- compose.yml              # Local dev: postgres + backend + frontend
-+-- deploy.ps1               # Terraform import + apply
-+-- new_image_deploy.ps1     # Full: build + push + deploy
-+-- makefile
++-- compose.yml              # Local dev orchestration
++-- deploy.ps1               # Build images + push + terraform apply
++-- makefile                 # Convenience wrappers
++-- .env                     # Local secrets (gitignored)
 |
 +-- backend/                 # FastAPI application
-|   +-- main.py              # App + lifespan startup
-|   +-- routers/
-|       +-- threads.py       # Thread CRUD + message history
-|       +-- chat.py          # SSE streaming chat endpoint
-|       +-- documents.py     # Document upload and removal
+|   +-- Dockerfile
+|   +-- requirements.txt
+|   +-- pyproject.toml
+|   +-- config.py            # Constants, model settings, paths
+|   +-- api/
+|   |   +-- main.py          # App + lifespan startup
+|   |   +-- routers/
+|   |       +-- threads.py   # Thread CRUD + message history
+|   |       +-- chat.py      # SSE streaming chat endpoint
+|   |       +-- documents.py # Document upload and removal
+|   +-- core/                # LangGraph internals
+|   |   +-- graph.py         # Graph assembly, LLM init, MCP tools
+|   |   +-- nodes.py         # chat_node - system prompt + RAG injection
+|   |   +-- state.py         # ChatState TypedDict
+|   |   +-- checkpointer.py  # Async PostgreSQL checkpointer
+|   +-- rag/                 # Retrieval-Augmented Generation
+|   |   +-- ingest.py        # Document loading, chunking, Pinecone indexing
+|   |   +-- store.py         # Per-thread Pinecone retriever store
+|   +-- tools/               # LangChain tools
+|   |   +-- rag_tool.py      # Queries the per-thread Pinecone retriever
+|   |   +-- search_tool.py   # DuckDuckGo web search
+|   |   +-- stock_mcp.py     # MCP server - Alpha Vantage stock price tool
+|   +-- db/
+|       +-- database_utils.py # PostgreSQL thread tracker, cleanup, delete
 |
-+-- core/                    # LangGraph internals
-|   +-- graph.py             # Graph assembly, LLM init, MCP tools
-|   +-- nodes.py             # chat_node - system prompt + RAG injection
-|   +-- state.py             # ChatState TypedDict
-|   +-- checkpointer.py      # Async PostgreSQL checkpointer
-|
-+-- rag/                     # Retrieval-Augmented Generation
-|   +-- ingest.py            # Document loading, chunking, Pinecone indexing
-|   +-- store.py             # Per-thread Pinecone retriever store
-|
-+-- tools/                   # LangChain tools
-|   +-- rag_tool.py          # Queries the per-thread Pinecone retriever
-|   +-- search_tool.py       # DuckDuckGo web search
-|   +-- stock_mcp.py         # MCP server - Alpha Vantage stock price tool
-|
-+-- db/
-|   +-- database_utils.py    # PostgreSQL thread tracker, cleanup, delete
-|
-+-- ui/
-|   +-- chat.py              # Main chat area rendering
-|   +-- sidebar.py           # Sidebar: new chat, document upload, conversation list
-|   +-- dialogs.py           # Delete confirmation dialog
-|   +-- utils.py             # CSS/HTML loaders, thread/session helpers
-|   +-- assets/
-|       +-- style.css        # Dark theme stylesheet
-|       +-- welcome.html     # Welcome screen capability cards
++-- frontend/                # React + TypeScript SPA
+|   +-- Dockerfile           # node builder -> nginx:alpine
+|   +-- nginx.conf
+|   +-- entrypoint.sh        # Injects BACKEND_URL at container startup
+|   +-- index.html
+|   +-- package.json
+|   +-- vite.config.ts
+|   +-- tailwind.config.ts
+|   +-- src/
+|       +-- config.ts        # Reads BACKEND_URL (runtime or build-time)
+|       +-- App.tsx
+|       +-- lib/
+|       |   +-- api.ts       # All backend calls; fetch()+ReadableStream for SSE
+|       |   +-- types.ts
+|       +-- components/
+|           +-- ChatArea.tsx
+|           +-- ChatInput.tsx
+|           +-- MessageBubble.tsx
+|           +-- Sidebar.tsx
+|           +-- WelcomeScreen.tsx
+|           +-- ui/          # shadcn/ui primitives
 |
 +-- my-terraform/            # GCP infrastructure as code
+    +-- bootstrap.ps1        # One-time project + IAM setup
     +-- main.tf
     +-- variables.tf
-    +-- terraform.tfvars     # Secret values - never committed to git
+    +-- terraform.tfvars     # Non-sensitive defaults (secrets via deploy.ps1 -var flags)
 ```
 
 ---
@@ -133,9 +144,6 @@ ALPHA_VANTAGE_API_KEY=...
 POSTGRES_PASSWORD=lumen123
 DATABASE_URL=postgresql://postgres:lumen123@localhost:5432/lumen
 
-# Backend URL (used by the local Streamlit frontend)
-BACKEND_URL=http://localhost:8000
-
 # Makefile / deploy scripts
 APP_VERSION=1.0.0
 GCP_PROJECT_ID=your-gcp-project-id
@@ -152,11 +160,11 @@ docker compose up --build
 ```
 
 This starts three containers:
-- **postgres** - pgvector-enabled PostgreSQL on port `5432`
+- **postgres** - PostgreSQL on port `5432`
 - **backend** - FastAPI on port `8000`
-- **frontend** - Streamlit on port `8501`
+- **frontend** - React/nginx on port `8080`
 
-Open `http://localhost:8501` in your browser.
+Open `http://localhost:8080` in your browser.
 
 ### Other useful commands
 
@@ -164,14 +172,14 @@ Open `http://localhost:8501` in your browser.
 make run      # start without rebuilding
 make down     # stop all containers
 make logs     # tail container logs
-make clean    # remove local image
+make clean    # remove local images
 ```
 
 ---
 
 ## Configuration
 
-All tuneable settings live in `config.py`:
+All tuneable settings live in `backend/config.py`:
 
 ```python
 # LLM
@@ -184,8 +192,6 @@ CHUNK_SIZE       = 1000
 CHUNK_OVERLAP    = 200
 RETRIEVER_K      = 4        # Top-k chunks returned per query
 
-# UI
-MAX_SIDEBAR_THREADS = 10
 THREAD_CLEANUP_DAYS = 7
 ```
 
@@ -207,7 +213,7 @@ Terraform provisions:
 - **Cloud SQL (PostgreSQL 16)** - Conversation persistence
 - **Secret Manager** - All API keys stored securely
 - **Cloud Run (backend)** - FastAPI service
-- **Cloud Run (frontend)** - Streamlit service (public URL printed after deploy)
+- **Cloud Run (frontend)** - React/nginx SPA (public URL printed after deploy)
 
 ### Step 1 - Fill in `.env`
 
@@ -245,7 +251,7 @@ gcloud auth application-default login
 
 ### Step 4 - Deploy
 
-Builds the Docker image, pushes it to Artifact Registry, and runs `terraform apply` to provision all infrastructure.
+Builds both Docker images, pushes them to Artifact Registry, and runs `terraform apply` to provision all infrastructure.
 
 ```bash
 make deploy-image
@@ -259,9 +265,9 @@ The frontend Cloud Run URL is printed to the terminal after deploy completes.
 make deploy-image
 ```
 
-Same command - builds a new image, pushes, and Terraform updates the Cloud Run services in place.
+Same command - builds new images, pushes, and Terraform updates the Cloud Run services in place.
 
-### What the deploy scripts do
+### What the deploy script does
 
 **`my-terraform/bootstrap.ps1`** (called by `make bootstrap-gcp`):
 1. Creates the GCP project if it does not exist
@@ -269,18 +275,13 @@ Same command - builds a new image, pushes, and Terraform updates the Cloud Run s
 3. Grants `roles/owner` to the deployer account
 4. Enables prerequisite APIs (`cloudresourcemanager`, `iam`, `serviceusage`)
 
-**`new_image_deploy.ps1`** (called by `make deploy-image`):
-1. Ensures the Artifact Registry repository exists
+**`deploy.ps1`** (called by `make deploy-image`):
+1. Sets the active GCP project and ensures Artifact Registry exists
 2. Authenticates Docker with Artifact Registry
-3. Builds the Docker image
-4. Pushes to Artifact Registry
-5. Calls `deploy.ps1`
-
-**`deploy.ps1`**:
-1. Sets the active GCP project
-2. Runs `terraform init`
-3. Imports any pre-existing Cloud SQL / Cloud Run / Secrets into Terraform state
-4. Runs `terraform apply`
+3. Builds and pushes the backend image (`lumen-backend`)
+4. Builds and pushes the frontend image (`lumen-frontend`)
+5. Runs `terraform init`, imports any pre-existing resources into state
+6. Runs `terraform apply`
 
 ### Tear down
 
@@ -312,6 +313,10 @@ START -> chat_node <-> tools -> END
 
 - **`chat_node`** - Calls GPT-4o with a dynamically built system prompt. If a document is loaded for the current thread, a RAG instruction is appended telling the LLM to call `rag_tool` before answering.
 - **`tools`** - A `ToolNode` that routes to whichever tool the LLM requested: `rag_tool`, `search_tool`, or `stock_get_price`.
+
+### SSE Streaming
+
+The frontend uses `fetch()` + `ReadableStream` (not `EventSource`) to POST to `/threads/{id}/chat` and consume the SSE stream. Each event is a JSON-encoded string chunk; the final event is `[DONE]`. This approach supports POST bodies, which `EventSource` does not.
 
 ### Document RAG
 
@@ -349,7 +354,7 @@ Stock price lookups use the **Model Context Protocol (MCP)**. `stock_mcp.py` run
 | Web Search | DuckDuckGo (`ddgs`) |
 | Stock Data | Alpha Vantage API via MCP |
 | Backend | FastAPI + Uvicorn |
-| Frontend | Streamlit |
+| Frontend | React + TypeScript + Vite + Tailwind CSS + shadcn/ui |
 | Conversation Persistence | PostgreSQL via LangGraph `AsyncPostgresSaver` |
 | Document Loaders | LangChain Community |
 | Infrastructure | Terraform + GCP (Cloud Run, Cloud SQL, Artifact Registry, Secret Manager) |
@@ -360,7 +365,7 @@ Stock price lookups use the **Model Context Protocol (MCP)**. `stock_mcp.py` run
 
 | Service | URL |
 |---|---|
-| **Frontend (Streamlit)** | https://lumen-frontend-eeh43tst7q-uc.a.run.app |
+| **Frontend** | https://lumen-frontend-eeh43tst7q-uc.a.run.app |
 | **Backend (FastAPI)** | https://lumen-backend-eeh43tst7q-uc.a.run.app |
 
 ## License
