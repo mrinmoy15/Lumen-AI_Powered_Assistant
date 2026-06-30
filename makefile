@@ -5,7 +5,32 @@ export
 # Variables
 VERSION = $(APP_VERSION)
 
-.PHONY: build run down logs clean bootstrap-gcp deploy-image destroy
+.PHONY: install install-backend install-frontend venv run-backend run-frontend build run down logs clean bootstrap-gcp deploy-image destroy
+
+## Install backend Python dependencies (activate .venv first: .venv\Scripts\activate)
+install-backend:
+	cd backend && pip install -r requirements.txt
+
+## Install frontend Node dependencies
+install-frontend:
+	cd frontend && npm install
+
+## Install all dependencies (backend + frontend)
+install: install-backend install-frontend
+
+## Create a Python 3.13 virtual environment at .venv (run once)
+venv:
+	py -3.13 -m venv .venv
+	@echo "Virtual env created. Run: .venv\Scripts\activate"
+
+## Run backend locally - starts Postgres via Docker, then FastAPI (activate .venv first)
+run-backend:
+	docker compose up postgres -d --wait
+	cd backend && python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+
+## Run frontend locally - Vite dev server on port 5173
+run-frontend:
+	cd frontend && npm run dev
 
 ## Build and start all containers locally
 build:
@@ -23,9 +48,10 @@ down:
 logs:
 	docker compose logs -f
 
-## Remove local image from Artifact Registry cache
+## Remove local images from Artifact Registry cache
 clean:
-	docker rmi $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(APP_NAME)/$(APP_NAME):$(VERSION)
+	docker rmi $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(APP_NAME)/$(APP_NAME)-backend:$(VERSION) || true
+	docker rmi $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(APP_NAME)/$(APP_NAME)-frontend:$(VERSION) || true
 
 ## One-time: create GCP project, link billing, grant deployer owner IAM
 ## If your account cannot link billing (org-managed), use: make bootstrap-gcp SKIP_BILLING=1

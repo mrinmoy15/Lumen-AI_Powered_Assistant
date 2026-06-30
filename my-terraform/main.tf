@@ -162,7 +162,7 @@ resource "google_cloud_run_v2_service" "backend" {
 
     containers {
       image = var.backend_image
-      command = ["sh", "-c", "python -m uvicorn backend.main:app --host 0.0.0.0 --port $${PORT:-8000}"]
+      command = ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port $${PORT:-8000}"]
 
       resources {
         limits = {
@@ -237,8 +237,8 @@ resource "google_cloud_run_v2_service" "frontend" {
   template {
     containers {
       image = var.frontend_image
-      command = ["sh", "-c", "python -m streamlit run app.py --server.port $${PORT:-8080} --server.address 0.0.0.0"]
-      
+      # No command override - Dockerfile ENTRYPOINT (entrypoint.sh) injects BACKEND_URL then starts nginx
+
       resources {
         limits = {
           memory = "1Gi"
